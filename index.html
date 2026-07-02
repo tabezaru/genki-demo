@@ -1,12 +1,1030 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>genki-demo</title>
-  </head>
-  <body>
-    <h1>genki-demo</h1>
-    <p>Place your downloaded index.html content here.</p>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>おもしろい方へ｜シフト・勤怠・給与 統合システム デモ</title>
+<style>
+  :root {
+    --ink: #1c1a17;
+    --ink-soft: #55524c;
+    --ink-faint: #8b8880;
+    --paper: #f7f5f0;
+    --card: #ffffff;
+    --line: #e3e0d8;
+    --line-strong: #cbc7bc;
+    --broth: #c2410c;      /* とんこつ醤油の色 */
+    --broth-soft: #fdf0e8;
+    --broth-line: #f0c9b3;
+    --menma: #1d9e75;      /* 昼 */
+    --menma-soft: #e1f5ee;
+    --nori: #4a3f8f;       /* 夜 */
+    --nori-soft: #ecebf9;
+    --tamago: #d98a0b;
+    --tamago-soft: #fbf0d8;
+    --danger: #c0392b;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 3px rgba(28,26,23,0.06), 0 4px 16px rgba(28,26,23,0.04);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .app {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+  }
+
+  /* ===== ヘッダー ===== */
+  header.masthead {
+    padding: 28px 0 20px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 0;
+  }
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .brand .mark {
+    font-size: 12px;
+    letter-spacing: 0.28em;
+    color: var(--broth);
+    font-weight: 700;
+  }
+  .brand h1 {
+    font-size: 26px;
+    letter-spacing: 0.02em;
+    font-weight: 800;
+  }
+  .brand .sub {
+    font-size: 13px;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+  }
+  .demo-note {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+
+  /* ===== タブ ===== */
+  nav.tabs {
+    display: flex;
+    gap: 2px;
+    margin: 22px 0 26px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--line);
+  }
+  nav.tabs button {
+    appearance: none;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-faint);
+    padding: 12px 18px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color .15s, border-color .15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  nav.tabs button .n {
+    font-size: 11px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--line);
+    color: var(--ink-soft);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 700;
+  }
+  nav.tabs button:hover { color: var(--ink-soft); }
+  nav.tabs button.active { color: var(--ink); border-bottom-color: var(--broth); }
+  nav.tabs button.active .n { background: var(--broth); color: #fff; }
+
+  .screen { display: none; animation: fade .3s ease; }
+  .screen.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* ===== 共通パーツ ===== */
+  .row { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+  .col { flex: 1; min-width: 280px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .card-head h3 { font-size: 15px; font-weight: 700; }
+  .card-head .hint { font-size: 12px; color: var(--ink-faint); }
+  .card-body { padding: 18px; }
+  .section-title {
+    font-size: 13px; font-weight: 700; color: var(--ink-soft);
+    letter-spacing: 0.04em; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::before {
+    content: ""; width: 3px; height: 14px; background: var(--broth); border-radius: 2px;
+  }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
+  }
+  .pill.day { background: var(--menma-soft); color: #0f6e56; }
+  .pill.night { background: var(--nori-soft); color: var(--nori); }
+  .pill.off { background: var(--line); color: var(--ink-faint); }
+  .pill.newbie { background: var(--tamago-soft); color: #8a5a08; }
+  .pill.staff { background: var(--broth-soft); color: var(--broth); }
+
+  .btn {
+    appearance: none; font-family: inherit; font-size: 14px; font-weight: 700;
+    padding: 11px 20px; border-radius: var(--radius-sm); cursor: pointer;
+    border: 1px solid var(--line-strong); background: #fff; color: var(--ink);
+    transition: transform .08s, background .15s, border-color .15s;
+  }
+  .btn:hover { background: var(--paper); }
+  .btn:active { transform: scale(.98); }
+  .btn.primary { background: var(--broth); color: #fff; border-color: var(--broth); }
+  .btn.primary:hover { background: #a5350a; }
+  .btn.menma { background: var(--menma); color: #fff; border-color: var(--menma); }
+  .btn.menma:hover { background: #178862; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.ghost { background: transparent; }
+  .btn.sm { padding: 7px 13px; font-size: 12.5px; }
+
+  /* ===== スマホフレーム（スタッフ画面）===== */
+  .phone-wrap { display: flex; justify-content: center; }
+  .phone {
+    width: 340px; max-width: 100%;
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-radius: 26px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .phone-status {
+    background: var(--ink); color: #fff; padding: 9px 18px;
+    font-size: 12px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .phone-status .store { font-weight: 700; letter-spacing: .04em; }
+  .phone-body { padding: 18px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); margin-bottom: 6px; }
+  select, input[type=text], input[type=password] {
+    width: 100%; font-family: inherit; font-size: 14px;
+    padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+    background: #fff; color: var(--ink);
+  }
+  select:focus, input:focus { outline: 2px solid var(--broth-line); border-color: var(--broth); }
+
+  .mode-toggle { display: flex; gap: 6px; background: var(--paper); padding: 4px; border-radius: var(--radius-sm); }
+  .mode-toggle button {
+    flex: 1; appearance: none; border: none; font-family: inherit; cursor: pointer;
+    font-size: 12.5px; font-weight: 700; padding: 8px; border-radius: 6px;
+    background: transparent; color: var(--ink-faint);
+  }
+  .mode-toggle button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+
+  /* 日付グリッド（スタッフ希望入力）*/
+  .daygrid { display: flex; flex-direction: column; gap: 6px; max-height: 380px; overflow-y: auto; padding-right: 4px; }
+  .dayrow { display: flex; align-items: center; gap: 6px; }
+  .dayrow .date { width: 52px; font-size: 12px; color: var(--ink-soft); flex-shrink: 0; }
+  .dayrow .date .wd { color: var(--ink-faint); margin-left: 2px; }
+  .dayrow .date.sun { color: var(--danger); }
+  .slotbtn {
+    flex: 1; appearance: none; font-family: inherit; cursor: pointer;
+    font-size: 12px; font-weight: 700; padding: 7px 4px; border-radius: 6px;
+    border: 1px solid var(--line); background: #fff; color: var(--ink-faint);
+    transition: all .12s;
+  }
+  .slotbtn.day.on { background: var(--menma-soft); border-color: var(--menma); color: #0f6e56; }
+  .slotbtn.night.on { background: var(--nori-soft); border-color: var(--nori); color: var(--nori); }
+  .slotbtn.rest.on { background: var(--line); border-color: var(--line-strong); color: var(--ink-soft); }
+  .dayrow.closed { opacity: .4; }
+  .dayrow.closed .slotbtn { pointer-events: none; }
+
+  .submit-bar { margin-top: 16px; }
+  .toast {
+    margin-top: 12px; padding: 10px 14px; border-radius: var(--radius-sm);
+    background: var(--menma-soft); color: #0f6e56; font-size: 13px; font-weight: 600;
+    display: none;
+  }
+  .toast.show { display: block; }
+
+  /* ===== 店長：入力状況 ===== */
+  .staff-status-list { display: flex; flex-direction: column; gap: 8px; }
+  .staff-status-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; background: var(--paper); border-radius: var(--radius-sm);
+    font-size: 13px;
+  }
+  .staff-status-row .who { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .status-dot.done { background: var(--menma); }
+  .status-dot.wait { background: var(--tamago); }
+
+  /* ===== AI生成 ===== */
+  .ai-panel { text-align: center; padding: 30px 20px; }
+  .ai-panel .spark { font-size: 30px; margin-bottom: 8px; }
+  .ai-status { font-size: 13px; color: var(--ink-soft); margin: 8px 0 18px; min-height: 20px; }
+  .progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin: 0 auto 18px; max-width: 340px; }
+  .progress-bar { height: 100%; width: 0; background: var(--broth); transition: width .3s; }
+
+  /* シフト表（店長確認）*/
+  .shift-table-wrap { overflow-x: auto; }
+  table.shift { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 640px; }
+  table.shift th, table.shift td { border: 1px solid var(--line); padding: 6px 5px; text-align: center; }
+  table.shift th { background: var(--paper); font-weight: 700; color: var(--ink-soft); font-size: 11px; }
+  table.shift th.sun, table.shift td.sun-col { color: var(--danger); }
+  table.shift .slot-label { background: var(--paper); font-weight: 700; text-align: left; padding-left: 10px; white-space: nowrap; }
+  table.shift .cell-name { font-size: 11px; line-height: 1.5; }
+  table.shift .cell-shain { color: var(--broth); font-weight: 700; }
+  table.shift .cell-newbie::after { content: "★"; color: var(--tamago); font-size: 9px; }
+  table.shift td.short { background: #fdece9; }
+
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11.5px; color: var(--ink-soft); margin-top: 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend .sw { width: 12px; height: 12px; border-radius: 3px; }
+
+  /* 叶え率レポート */
+  table.rate { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.rate th, table.rate td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line); }
+  table.rate th { font-size: 11.5px; color: var(--ink-faint); font-weight: 700; }
+  table.rate td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .bar-cell { display: flex; align-items: center; gap: 8px; }
+  .bar-track { flex: 1; height: 7px; background: var(--line); border-radius: 4px; overflow: hidden; min-width: 60px; }
+  .bar-fill { height: 100%; background: var(--menma); border-radius: 4px; }
+  .bar-fill.low { background: var(--tamago); }
+  .rate-ok { color: #0f6e56; font-weight: 700; font-size: 11px; }
+  .rate-ng { color: var(--danger); font-weight: 700; font-size: 11px; }
+
+  /* ===== 勤怠 ===== */
+  table.attend { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.attend th, table.attend td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; }
+  table.attend th { font-size: 11.5px; color: var(--ink-faint); font-weight: 700; }
+  table.attend td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .auto-badge { font-size: 10.5px; font-weight: 700; color: #0f6e56; background: var(--menma-soft); padding: 2px 7px; border-radius: 10px; }
+
+  /* ===== 給与（管理者ロック）===== */
+  .lock-screen { text-align: center; padding: 44px 24px; }
+  .lock-screen .lockicon { font-size: 34px; margin-bottom: 10px; }
+  .lock-screen h3 { font-size: 17px; margin-bottom: 6px; }
+  .lock-screen p { font-size: 13px; color: var(--ink-faint); margin-bottom: 20px; }
+  .lock-form { max-width: 280px; margin: 0 auto; text-align: left; }
+  .lock-err { color: var(--danger); font-size: 12.5px; margin-top: 8px; display: none; }
+  .lock-err.show { display: block; }
+  .lock-hint { font-size: 11.5px; color: var(--ink-faint); margin-top: 14px; }
+
+  table.pay { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.pay th, table.pay td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; }
+  table.pay th { font-size: 11.5px; color: var(--ink-faint); font-weight: 700; }
+  table.pay td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.pay tr.staff-row td { background: var(--broth-soft); }
+  table.pay .total { font-weight: 800; color: var(--ink); }
+
+  .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; cursor: pointer; inset: 0; background: var(--line-strong);
+    border-radius: 22px; transition: .2s;
+  }
+  .slider::before {
+    content: ""; position: absolute; height: 16px; width: 16px; left: 3px; top: 3px;
+    background: #fff; border-radius: 50%; transition: .2s;
+  }
+  input:checked + .slider { background: var(--menma); }
+  input:checked + .slider::before { transform: translateX(18px); }
+
+  .kpi-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .kpi {
+    flex: 1; min-width: 130px; background: var(--paper); border-radius: var(--radius-sm); padding: 14px 16px;
+  }
+  .kpi .label { font-size: 11.5px; color: var(--ink-faint); font-weight: 600; }
+  .kpi .val { font-size: 22px; font-weight: 800; margin-top: 3px; }
+  .kpi .val small { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+
+  .flow-hint {
+    background: var(--broth-soft); border: 1px solid var(--broth-line); color: #8a3208;
+    padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 20px;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .flow-hint b { color: var(--broth); }
+
+  footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-faint); }
+
+  @media (max-width: 640px) {
+    .brand h1 { font-size: 21px; }
+    nav.tabs button { padding: 10px 12px; font-size: 13px; }
+    nav.tabs button .label-full { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="masthead">
+    <div class="brand">
+      <span class="mark">株式会社 元気ですか</span>
+      <h1>おもしろい方へ</h1>
+      <span class="sub">シフト・勤怠・給与 統合システム</span>
+    </div>
+    <p class="demo-note">デモ版 ｜ 4つの画面がひとつながりで動きます。上のタブで、業務の流れ（希望入力 → AI作成 → 勤怠 → 給与）を順に体験できます。</p>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-screen="staff" class="active"><span class="n">1</span><span class="label-full">スタッフ希望入力</span></button>
+    <button data-screen="manager"><span class="n">2</span><span class="label-full">AI シフト作成</span></button>
+    <button data-screen="attend"><span class="n">3</span><span class="label-full">勤怠確認</span></button>
+    <button data-screen="pay"><span class="n">4</span><span class="label-full">給与（管理者）</span></button>
+  </nav>
+
+  <!-- ===================== 画面1：スタッフ希望入力 ===================== -->
+  <section class="screen active" id="screen-staff">
+    <div class="flow-hint">
+      <span>🍜</span>
+      <div>スタッフは自分のスマホで、来月に<b>入れる日</b>（または<b>入れない日</b>）を選ぶだけ。アプリのインストールも、Googleアカウントも要りません。</div>
+    </div>
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="phone-status">
+          <span>9:41</span>
+          <span class="store">おもしろい方へ</span>
+          <span>▲ 100%</span>
+        </div>
+        <div class="phone-body">
+          <div class="field">
+            <label>お名前</label>
+            <select id="staffSelect"></select>
+          </div>
+          <div class="field">
+            <label>入力方法</label>
+            <div class="mode-toggle" id="modeToggle">
+              <button data-mode="available" class="on">入れる日を選ぶ</button>
+              <button data-mode="ng">入れない日を選ぶ</button>
+            </div>
+            <p id="modeDesc" style="font-size:11.5px;color:var(--ink-faint);margin-top:6px;">タップした日が「シフトに入れる日」になります。</p>
+          </div>
+          <div class="field">
+            <label id="gridLabel">2026年7月 ｜ 希望を入力</label>
+            <div class="daygrid" id="dayGrid"></div>
+          </div>
+          <div class="submit-bar">
+            <button class="btn menma" style="width:100%" onclick="submitRequest()">この内容で希望を送る</button>
+          </div>
+          <div class="toast" id="staffToast">希望を送信しました。締め切り（20日）まで何度でも変更できます。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 画面2：店長 AI作成 ===================== -->
+  <section class="screen" id="screen-manager">
+    <div class="flow-hint">
+      <span>🤖</span>
+      <div>全員の希望が集まったら、<b>AIがシフトの叩き台を自動作成</b>。店長は確認して調整するだけ。ゼロから組む手間がなくなります。</div>
+    </div>
+
+    <div class="row">
+      <div class="col" style="flex:0 0 300px;">
+        <div class="card">
+          <div class="card-head"><h3>希望の入力状況</h3><span class="hint">締切 7/20</span></div>
+          <div class="card-body">
+            <div class="staff-status-list" id="statusList"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-head"><h3>シフト自動作成</h3><span class="hint">7月分</span></div>
+          <div class="card-body">
+            <div class="ai-panel" id="aiPanel">
+              <div class="spark">✦</div>
+              <p style="font-size:14px;font-weight:700;">AIがシフトの叩き台を作ります</p>
+              <p class="ai-status" id="aiStatus">全スタッフの希望・ルールをもとに最適な配置を計算します。</p>
+              <div class="progress" id="progressWrap" style="display:none;"><div class="progress-bar" id="progressBar"></div></div>
+              <button class="btn primary" id="genBtn" onclick="runAI()">シフトを自動作成する</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="shiftResult" style="display:none; margin-top:20px;">
+      <div class="card">
+        <div class="card-head">
+          <h3>AI作成シフト（叩き台）</h3>
+          <div style="display:flex;gap:8px;">
+            <button class="btn sm ghost" onclick="runAI()">作り直す</button>
+            <button class="btn sm menma" onclick="confirmShift()">このシフトで確定</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="shift-table-wrap"><table class="shift" id="shiftTable"></table></div>
+          <div class="legend">
+            <span><span class="sw" style="background:var(--broth)"></span>社員（調理・A）</span>
+            <span><span class="sw" style="background:var(--menma)"></span>昼</span>
+            <span><span class="sw" style="background:var(--nori)"></span>夜</span>
+            <span>★ 新人</span>
+            <span><span class="sw" style="background:#fdece9;border:1px solid #f0c9b3"></span>人員不足</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <div class="card-head">
+          <h3>希望叶え率</h3>
+          <span class="hint">たくさん入りたい人ほど多く・週1の人も弾かれない</span>
+        </div>
+        <div class="card-body">
+          <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;">
+            希望を出した日のうち、実際にシフトに入れた割合です。希望回数が少ない人ほど高い「下限（最低保証）」を設定し、極端に入れない人が出ないようにしています。
+            <span style="color:var(--ink-faint)">※ 通信・クラウド業界で使われる「最小保証つき比例配分」の考え方を応用。</span>
+          </p>
+          <table class="rate" id="rateTable"></table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 画面3：勤怠 ===================== -->
+  <section class="screen" id="screen-attend">
+    <div class="flow-hint">
+      <span>🗓️</span>
+      <div>確定したシフトから、<b>勤怠データが自動で作られます</b>。勤務時間は固定（昼 10:15–15:30 / 夜 17:45–23:30）なので打刻いらず。月末に「この実態で合ってますか？」と確認するだけです。</div>
+    </div>
+
+    <div id="attendLocked" class="card">
+      <div class="card-body" style="text-align:center;padding:40px 20px;color:var(--ink-faint);">
+        まず「AI シフト作成」でシフトを確定すると、勤怠データが自動生成されます。
+        <div style="margin-top:14px;"><button class="btn sm" onclick="goTab('manager')">シフト作成へ</button></div>
+      </div>
+    </div>
+
+    <div id="attendReady" style="display:none;">
+      <div class="row">
+        <div class="col" style="flex:0 0 260px;">
+          <div class="card">
+            <div class="card-head"><h3>対象スタッフ</h3></div>
+            <div class="card-body">
+              <div class="field" style="margin:0;">
+                <select id="attendStaff" onchange="renderAttend()"></select>
+              </div>
+              <div class="kpi-row" style="margin-top:16px;flex-direction:column;">
+                <div class="kpi"><div class="label">出勤日数</div><div class="val" id="attDays">–</div></div>
+                <div class="kpi"><div class="label">総勤務時間</div><div class="val" id="attHours">–</div></div>
+                <div class="kpi"><div class="label">うち深夜</div><div class="val" id="attNight">–</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card">
+            <div class="card-head">
+              <h3>勤怠明細 <span class="auto-badge">シフトから自動生成</span></h3>
+              <span class="hint">7月</span>
+            </div>
+            <div class="card-body">
+              <div style="overflow-x:auto;"><table class="attend" id="attendTable"></table></div>
+              <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:8px;">
+                <button class="btn sm ghost">急な変更を修正</button>
+                <button class="btn sm menma" onclick="approveAttend()">この勤務実態で確定</button>
+              </div>
+              <div class="toast" id="attendToast" style="margin-top:12px;">勤務実態を確定しました。給与計算にそのまま連携されます。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 画面4：給与（管理者ロック）===================== -->
+  <section class="screen" id="screen-pay">
+    <div id="payLock">
+      <div class="card">
+        <div class="lock-screen">
+          <div class="lockicon">🔒</div>
+          <h3>管理者エリア</h3>
+          <p>給与情報は店長のみ閲覧できます。スタッフには表示されません。</p>
+          <div class="lock-form">
+            <div class="field">
+              <label>管理者ID</label>
+              <input type="text" id="mgrId" placeholder="tencho" autocomplete="off">
+            </div>
+            <div class="field">
+              <label>パスワード</label>
+              <input type="password" id="mgrPw" placeholder="••••••" autocomplete="off">
+            </div>
+            <button class="btn primary" style="width:100%" onclick="login()">ログイン</button>
+            <div class="lock-err" id="loginErr">IDまたはパスワードが違います。</div>
+            <p class="lock-hint">デモ用ログイン：ID <b>tencho</b> ／ PW <b>1234</b><br>（本番はIDパスの変更が可能です）</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="payDash" style="display:none;">
+      <div class="flow-hint">
+        <span>💴</span>
+        <div>勤怠データがそのまま流れ込んで<b>給与を自動計算</b>。手当のオン・オフはスイッチで切り替え。既存の給料表の計算式をそのまま画面化しています。</div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi"><div class="label">対象人数</div><div class="val" id="payCount">–</div></div>
+        <div class="kpi"><div class="label">支給総額（概算）</div><div class="val" id="payTotal">–</div></div>
+        <div class="kpi"><div class="label">対象月</div><div class="val">7<small> 月</small></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>給与テーブル</h3>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="hint">手当はスイッチで調整</span>
+            <button class="btn sm ghost" onclick="logout()">ログアウト</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="overflow-x:auto;"><table class="pay" id="payTable"></table></div>
+          <p style="font-size:11.5px;color:var(--ink-faint);margin-top:12px;">
+            計算式：アルバイト＝時給×実働＋時給×1.25×深夜＋手当　／　社員＝月給＋手当。既存Excelの数式をそのまま採用しています。
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    おもしろい方へ（株式会社 元気ですか）｜ シフト・勤怠・給与 統合システム デモ版<br>
+    このデモはサンプルデータで動作します。実際の希望シフトデータを入れると、AIが実シフトに近い叩き台を作成します。
+  </footer>
+</div>
+
+<script>
+// ======================================================
+// データ定義
+// ======================================================
+const STAFF = [
+  { name:"入江 駿輔", role:"社員", newbie:false, wage:0, salary:280000, allowances:[] },
+  { name:"松岡 健王", role:"社員", newbie:false, wage:0, salary:250000, allowances:[{key:"boss",label:"ボス手当",amt:20000,on:true}] },
+  { name:"弓 嵐士",   role:"社員", newbie:false, wage:0, salary:240000, allowances:[] },
+  { name:"棚原 秀人", role:"バイト", newbie:false, wage:1200 },
+  { name:"國貞 慧丞", role:"バイト", newbie:false, wage:1200 },
+  { name:"浅野 陽大", role:"バイト", newbie:false, wage:1200 },
+  { name:"重村 藍雅", role:"バイト", newbie:false, wage:1200 },
+  { name:"服部 功太郎", role:"バイト", newbie:false, wage:1200 },
+  { name:"柳田 大和", role:"バイト", newbie:true, wage:1064, allowances:[{key:"train",label:"研修給",amt:0,on:true}] },
+  { name:"西田 世那", role:"バイト", newbie:true, wage:1064 },
+  { name:"北村 怜雄", role:"バイト", newbie:true, wage:1064 },
+  { name:"辻 重成",   role:"バイト", newbie:true, wage:1064 },
+  { name:"北浦 青哉", role:"バイト", newbie:true, wage:1064 },
+];
+
+const YEAR = 2026, MONTH = 7, DAYS = 31;
+const CLOSED = [0]; // 日曜定休（JS: 0=日）
+const WD = ["日","月","火","水","木","金","土"];
+const SLOTS = ["day","night"];
+const SLOT_JA = { day:"昼", night:"夜" };
+// 勤務時間（実働・深夜）
+const SLOT_HOURS = { day:{ work:5.25, night:0 }, night:{ work:5.75, night:1.5 } };
+
+// サンプル希望（実データ差し替え想定）
+// mode: available=入れる日 / ng=入れない日。pattern: 曜日[0-6], slots
+const SAMPLE_REQ = {
+  "棚原 秀人": { mode:"ng", days:{} },                        // ほぼ毎日OK（ベテラン）
+  "國貞 慧丞": { mode:"available", weekdays:[1,3,5] },         // 月水金
+  "浅野 陽大": { mode:"available", weekdays:[2] },             // 火のみ（週1）
+  "重村 藍雅": { mode:"available", weekdays:[2,4,6] },         // 火木土
+  "服部 功太郎": { mode:"available", weekdays:[3,5] },         // 水金
+  "柳田 大和": { mode:"available", weekdays:[4,6] },           // 木土（新人）
+  "西田 世那": { mode:"available", weekdays:[2,5] },           // 火金（新人）
+  "北村 怜雄": { mode:"available", weekdays:[1,4] },           // 月木（新人）
+  "辻 重成":   { mode:"available", weekdays:[3,6] },           // 水土（新人）
+  "北浦 青哉": { mode:"available", weekdays:[5] },             // 金のみ（新人・週1）
+  "入江 駿輔": { mode:"ng", days:{} },
+  "松岡 健王": { mode:"ng", days:{} },
+  "弓 嵐士":   { mode:"ng", days:{} },
+};
+
+// 状態
+let currentMode = "available";
+let staffPicks = {}; // 画面1の入力 { "day-slot": "day"/"night"/"rest" }
+let generated = null; // 生成結果
+let confirmed = false;
+
+// ======================================================
+// ユーティリティ
+// ======================================================
+function weekday(d){ return new Date(YEAR, MONTH-1, d).getDay(); }
+function isOpen(d){ return !CLOSED.includes(weekday(d)); }
+
+function buildAvailability(name){
+  // SAMPLE_REQ から (day,slot)->bool を作る
+  const req = SAMPLE_REQ[name];
+  const av = {};
+  for(let d=1; d<=DAYS; d++){
+    if(!isOpen(d)){ continue; }
+    let can;
+    if(req.weekdays){
+      can = req.weekdays.includes(weekday(d));
+      SLOTS.forEach(s=> av[d+"-"+s] = can);
+    } else if(req.mode==="ng"){
+      // NGなし＝全部OK（社員・ベテラン）
+      SLOTS.forEach(s=> av[d+"-"+s] = true);
+    } else {
+      SLOTS.forEach(s=> av[d+"-"+s] = false);
+    }
+  }
+  return av;
+}
+
+// ======================================================
+// 画面1：スタッフ希望入力
+// ======================================================
+function initStaffScreen(){
+  const sel = document.getElementById("staffSelect");
+  sel.innerHTML = STAFF.map(s=>`<option>${s.name}</option>`).join("");
+  document.querySelectorAll("#modeToggle button").forEach(b=>{
+    b.onclick = ()=>{
+      document.querySelectorAll("#modeToggle button").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on");
+      currentMode = b.dataset.mode;
+      document.getElementById("modeDesc").textContent =
+        currentMode==="available" ? "タップした日が「シフトに入れる日」になります。"
+                                   : "タップした日が「シフトに入れない日（休み）」になります。";
+      renderDayGrid();
+    };
+  });
+  renderDayGrid();
+}
+
+function renderDayGrid(){
+  const grid = document.getElementById("dayGrid");
+  let html = "";
+  for(let d=1; d<=DAYS; d++){
+    const wd = weekday(d);
+    const closed = CLOSED.includes(wd);
+    const sunCls = wd===0 ? "sun" : "";
+    const key = d;
+    html += `<div class="dayrow ${closed?'closed':''}">
+      <div class="date ${sunCls}">${d}<span class="wd">(${WD[wd]})</span></div>`;
+    if(closed){
+      html += `<div class="slotbtn" style="flex:3;opacity:.5;pointer-events:none;">定休</div>`;
+    } else {
+      ["day","night","rest"].forEach(kind=>{
+        const cur = staffPicks[key] || "";
+        const on = cur===kind ? "on" : "";
+        const lbl = kind==="day"?"昼":kind==="night"?"夜":"休み";
+        html += `<button class="slotbtn ${kind} ${on}" onclick="pickSlot(${key},'${kind}')">${lbl}</button>`;
+      });
+    }
+    html += `</div>`;
+  }
+  grid.innerHTML = html;
+}
+function pickSlot(day, kind){
+  staffPicks[day] = (staffPicks[day]===kind) ? "" : kind;
+  renderDayGrid();
+}
+function submitRequest(){
+  const t = document.getElementById("staffToast");
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 3500);
+}
+
+// ======================================================
+// 画面2：AI シフト作成
+// ======================================================
+function initStatusList(){
+  const list = document.getElementById("statusList");
+  // サンプル：ほとんど入力済み、2名だけ未入力
+  list.innerHTML = STAFF.map((s,i)=>{
+    const done = i % 7 !== 5; // 適当に一部未入力
+    return `<div class="staff-status-row">
+      <span class="who"><span class="status-dot ${done?'done':'wait'}"></span>${s.name}</span>
+      <span style="font-size:11.5px;color:${done?'#0f6e56':'var(--tamago)'};font-weight:700;">${done?'入力済み':'未入力'}</span>
+    </div>`;
+  }).join("");
+}
+
+function getFloor(total){
+  if(total<=4) return 0.90;
+  if(total<=10) return 0.70;
+  return 0.50;
+}
+
+function runAI(){
+  const panel = document.getElementById("genBtn");
+  const status = document.getElementById("aiStatus");
+  const pw = document.getElementById("progressWrap");
+  const bar = document.getElementById("progressBar");
+  panel.disabled = true;
+  pw.style.display = "block";
+  const steps = [
+    [15,"希望を集計しています…"],
+    [40,"社員1名＋アルバイト2名の枠を確保…"],
+    [65,"新人同士のペアを回避…"],
+    [85,"叶え率を調整（最小保証つき比例配分）…"],
+    [100,"完成しました"],
+  ];
+  let i=0;
+  const tick = ()=>{
+    if(i>=steps.length){
+      generateShift();
+      document.getElementById("shiftResult").style.display="block";
+      panel.disabled=false; pw.style.display="none"; bar.style.width="0";
+      status.textContent="叩き台ができました。内容を確認して調整できます。";
+      document.getElementById("shiftResult").scrollIntoView({behavior:"smooth",block:"start"});
+      return;
+    }
+    bar.style.width = steps[i][0]+"%";
+    status.textContent = steps[i][1];
+    i++;
+    setTimeout(tick, 480);
+  };
+  tick();
+}
+
+// シフト生成ロジック（Pythonシミュレーターの移植）
+function generateShift(){
+  const av = {};
+  STAFF.forEach(s=> av[s.name] = buildAvailability(s.name));
+  const totalReq = {};
+  STAFF.forEach(s=>{
+    totalReq[s.name] = Object.values(av[s.name]).filter(Boolean).length;
+  });
+  const granted = {}; STAFF.forEach(s=> granted[s.name]=0);
+
+  const rate = (n)=> totalReq[n]===0 ? 1 : granted[n]/totalReq[n];
+  const floorGap = (n)=>{
+    if(totalReq[n]===0) return 1;
+    return rate(n) - getFloor(totalReq[n]);
+  };
+
+  const shainNames = STAFF.filter(s=>s.role==="社員").map(s=>s.name);
+  const isNewbie = {}; STAFF.forEach(s=> isNewbie[s.name]=s.newbie);
+
+  const assignments = [];
+  for(let d=1; d<=DAYS; d++){
+    if(!isOpen(d)) continue;
+    SLOTS.forEach(slot=>{
+      const used = new Set();
+      const asg = { day:d, slot, shain:null, arbeits:[] };
+      // 社員1名：希望OK＆叶え率低い順
+      let shainCand = shainNames.filter(n=> !used.has(n) && av[n][d+"-"+slot]);
+      shainCand.sort((a,b)=> rate(a)-rate(b) || a.localeCompare(b,"ja"));
+      if(shainCand.length){ asg.shain=shainCand[0]; used.add(shainCand[0]); granted[shainCand[0]]++; }
+      // アルバイト2名
+      let arCand = STAFF.filter(s=>s.role==="バイト").map(s=>s.name)
+        .filter(n=> !used.has(n) && av[n][d+"-"+slot]);
+      arCand.sort((a,b)=> floorGap(a)-floorGap(b) || rate(a)-rate(b) || a.localeCompare(b,"ja"));
+      let newbieCount=0;
+      for(const n of arCand){
+        if(asg.arbeits.length>=2) break;
+        if(isNewbie[n] && newbieCount>=1) continue;
+        asg.arbeits.push(n); used.add(n); granted[n]++;
+        if(isNewbie[n]) newbieCount++;
+      }
+      assignments.push(asg);
+    });
+  }
+  generated = { assignments, totalReq, granted, rate:{}, av };
+  STAFF.forEach(s=> generated.rate[s.name]=rate(s.name));
+  renderShiftTable();
+  renderRateTable();
+}
+
+function renderShiftTable(){
+  // 日付を列、昼夜を行にする（横スクロール）
+  const openDays = [];
+  for(let d=1; d<=DAYS; d++) if(isOpen(d)) openDays.push(d);
+  const byKey = {};
+  generated.assignments.forEach(a=> byKey[a.day+"-"+a.slot]=a);
+
+  let head = `<tr><th class="slot-label">営業</th>`;
+  openDays.forEach(d=>{
+    const sun = weekday(d)===0?"sun":"";
+    head += `<th class="${sun}">${d}<br><span style="font-weight:400;color:var(--ink-faint)">${WD[weekday(d)]}</span></th>`;
+  });
+  head += `</tr>`;
+
+  let rows = "";
+  SLOTS.forEach(slot=>{
+    rows += `<tr><td class="slot-label"><span class="pill ${slot}">${SLOT_JA[slot]}営業</span></td>`;
+    openDays.forEach(d=>{
+      const a = byKey[d+"-"+slot];
+      const people = [];
+      if(a.shain) people.push(`<span class="cell-shain">${shortName(a.shain)}</span>`);
+      a.arbeits.forEach(n=>{
+        const nb = STAFF.find(s=>s.name===n).newbie ? "cell-newbie":"";
+        people.push(`<span class="${nb}">${shortName(n)}</span>`);
+      });
+      const short = (a.arbeits.length<2 || !a.shain) ? "short":"";
+      rows += `<td class="${short}"><div class="cell-name">${people.join("<br>")}</div></td>`;
+    });
+    rows += `</tr>`;
+  });
+  document.getElementById("shiftTable").innerHTML = head+rows;
+}
+function shortName(full){
+  // 姓だけ
+  return full.split(" ")[0];
+}
+
+function renderRateTable(){
+  let html = `<tr><th>氏名</th><th>区分</th><th>希望</th><th>採用</th><th style="width:38%">叶え率</th><th>判定</th></tr>`;
+  STAFF.forEach(s=>{
+    const total = generated.totalReq[s.name];
+    const g = generated.granted[s.name];
+    if(s.role==="社員"){ return; } // 社員は休み希望のみなので率表示スキップ
+    const r = total? g/total : 0;
+    const floor = getFloor(total);
+    const low = r < floor;
+    const pct = Math.round(r*100);
+    const nb = s.newbie ? ` <span class="pill newbie">新</span>`:"";
+    html += `<tr>
+      <td>${s.name}${nb}</td>
+      <td><span class="pill staff" style="background:var(--broth-soft);color:var(--broth)">バイト</span></td>
+      <td class="num">${total}</td>
+      <td class="num">${g}</td>
+      <td><div class="bar-cell"><div class="bar-track"><div class="bar-fill ${low?'low':''}" style="width:${pct}%"></div></div><span style="font-variant-numeric:tabular-nums;min-width:36px;text-align:right">${pct}%</span></div></td>
+      <td>${low?'<span class="rate-ng">下限割れ</span>':'<span class="rate-ok">OK</span>'}</td>
+    </tr>`;
+  });
+  document.getElementById("rateTable").innerHTML = html;
+}
+
+function confirmShift(){
+  confirmed = true;
+  document.getElementById("attendLocked").style.display="none";
+  document.getElementById("attendReady").style.display="block";
+  initAttendScreen();
+  alert("シフトを確定しました。\n勤怠データが自動生成され、給与計算まで連携されます。");
+  goTab("attend");
+}
+
+// ======================================================
+// 画面3：勤怠
+// ======================================================
+function initAttendScreen(){
+  const sel = document.getElementById("attendStaff");
+  sel.innerHTML = STAFF.map(s=>`<option>${s.name}</option>`).join("");
+  renderAttend();
+}
+function staffShifts(name){
+  // 確定シフトからその人の勤務を抽出
+  const list = [];
+  generated.assignments.forEach(a=>{
+    const inSlot = (a.shain===name) || a.arbeits.includes(name);
+    if(inSlot) list.push({ day:a.day, slot:a.slot });
+  });
+  return list;
+}
+function renderAttend(){
+  const name = document.getElementById("attendStaff").value;
+  const shifts = staffShifts(name);
+  let days=0, work=0, night=0;
+  let rows = `<tr><th>日付</th><th>区分</th><th>時間帯</th><th class="num">実働</th><th class="num">深夜</th></tr>`;
+  shifts.forEach(s=>{
+    const h = SLOT_HOURS[s.slot];
+    days++; work += h.work; night += h.night;
+    const time = s.slot==="day" ? "10:15–15:30" : "17:45–23:30";
+    rows += `<tr>
+      <td>7/${s.day}(${WD[weekday(s.day)]})</td>
+      <td><span class="pill ${s.slot}">${SLOT_JA[s.slot]}</span></td>
+      <td style="color:var(--ink-soft)">${time}</td>
+      <td class="num">${h.work.toFixed(2)}h</td>
+      <td class="num">${h.night>0?h.night.toFixed(2)+"h":"–"}</td>
+    </tr>`;
+  });
+  if(shifts.length===0){
+    rows += `<tr><td colspan="5" style="text-align:center;color:var(--ink-faint);padding:20px;">この月の勤務はありません</td></tr>`;
+  }
+  document.getElementById("attendTable").innerHTML = rows;
+  document.getElementById("attDays").textContent = days + "日";
+  document.getElementById("attHours").innerHTML = work.toFixed(1) + '<small> h</small>';
+  document.getElementById("attNight").innerHTML = night.toFixed(1) + '<small> h</small>';
+}
+function approveAttend(){
+  const t = document.getElementById("attendToast");
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 3500);
+}
+
+// ======================================================
+// 画面4：給与（管理者）
+// ======================================================
+function login(){
+  const id = document.getElementById("mgrId").value.trim();
+  const pw = document.getElementById("mgrPw").value.trim();
+  if(id==="tencho" && pw==="1234"){
+    document.getElementById("payLock").style.display="none";
+    document.getElementById("payDash").style.display="block";
+    document.getElementById("loginErr").classList.remove("show");
+    renderPay();
+  } else {
+    document.getElementById("loginErr").classList.add("show");
+  }
+}
+function logout(){
+  document.getElementById("payDash").style.display="none";
+  document.getElementById("payLock").style.display="block";
+  document.getElementById("mgrPw").value="";
+}
+
+function calcWorkHours(name){
+  if(!generated) return { work:0, night:0 };
+  let work=0, night=0;
+  staffShifts(name).forEach(s=>{
+    const h = SLOT_HOURS[s.slot]; work+=h.work; night+=h.night;
+  });
+  return { work, night };
+}
+
+function renderPay(){
+  let total = 0;
+  let rows = `<tr><th>氏名</th><th>区分</th><th class="num">実働</th><th class="num">深夜</th><th>手当</th><th class="num">支給額</th></tr>`;
+  STAFF.forEach((s,idx)=>{
+    const { work, night } = generated ? calcWorkHours(s.name) : {work:0,night:0};
+    let pay = 0;
+    let allowanceHtml = "–";
+    if(s.role==="バイト"){
+      const normal = Math.max(work - night, 0);
+      pay = Math.round(s.wage*normal + s.wage*1.25*night);
+    } else {
+      pay = s.salary;
+    }
+    // 手当
+    if(s.allowances && s.allowances.length){
+      allowanceHtml = s.allowances.map((a,ai)=>{
+        const checked = a.on ? "checked":"";
+        return `<label style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;margin-right:8px;">
+          <span class="switch"><input type="checkbox" ${checked} onchange="toggleAllowance(${idx},${ai})"><span class="slider"></span></span>
+          ${a.label}${a.amt?('¥'+a.amt.toLocaleString()):''}
+        </label>`;
+      }).join("");
+      s.allowances.forEach(a=>{ if(a.on) pay += a.amt; });
+    }
+    total += pay;
+    const cls = s.role==="社員" ? "staff-row":"";
+    const nb = s.newbie ? ` <span class="pill newbie">新</span>`:"";
+    rows += `<tr class="${cls}">
+      <td>${s.name}${nb}</td>
+      <td>${s.role==="社員"?'<span class="pill staff">社員</span>':'<span class="pill" style="background:var(--menma-soft);color:#0f6e56">バイト</span>'}</td>
+      <td class="num">${s.role==="バイト"?work.toFixed(1)+"h":"–"}</td>
+      <td class="num">${s.role==="バイト"&&night>0?night.toFixed(1)+"h":"–"}</td>
+      <td>${allowanceHtml}</td>
+      <td class="num total">¥${pay.toLocaleString()}</td>
+    </tr>`;
+  });
+  document.getElementById("payTable").innerHTML = rows;
+  document.getElementById("payCount").innerHTML = STAFF.length + '<small> 名</small>';
+  document.getElementById("payTotal").innerHTML = '¥' + total.toLocaleString();
+}
+function toggleAllowance(staffIdx, aIdx){
+  STAFF[staffIdx].allowances[aIdx].on = !STAFF[staffIdx].allowances[aIdx].on;
+  renderPay();
+}
+
+// ======================================================
+// タブ切り替え
+// ======================================================
+function goTab(name){
+  document.querySelectorAll("nav.tabs button").forEach(b=>{
+    b.classList.toggle("active", b.dataset.screen===name);
+  });
+  document.querySelectorAll(".screen").forEach(s=>{
+    s.classList.toggle("active", s.id==="screen-"+name);
+  });
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+document.querySelectorAll("nav.tabs button").forEach(b=>{
+  b.onclick = ()=> goTab(b.dataset.screen);
+});
+
+// ======================================================
+// 初期化
+// ======================================================
+initStaffScreen();
+initStatusList();
+</script>
+</body>
 </html>
